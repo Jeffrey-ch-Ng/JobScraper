@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup
+from urllib.request import Request, urlopen
 import requests
 import pandas as pd
-from selenium import webdriver
 
-driver = webdriver.Chrome("C:/Users/Jeffrey Ng/Desktop/webdrivers/chromedriver.exe")
+#from selenium import webdriver
+
+#driver = webdriver.Chrome("C:/Users/Jeffrey Ng/Desktop/webdrivers/chromedriver.exe")
 
 def format_html(word):
     for x in range(len(word)):
@@ -64,17 +66,24 @@ def get_indeed():
 
 
 def get_glassdoor():
-    glassdoor = requests.get("https://www.glassdoor.ca/Job/software-intern-jobs-SRCH_KO0,15.htm")
-    print(glassdoor)
 
-    soup = BeautifulSoup(glassdoor.content, 'html.parser')
+    url = "https://www.glassdoor.ca/Job/software-intern-jobs-SRCH_KO0,15.htm"
 
-    jobs_column = soup.find(id='JobResults')
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    glassdoor = urlopen(req).read()
 
-    job_names_container = jobs_column.select(".jl .jobTitle .titleContainer a")
+    if(glassdoor):
+        print("Glassdoor: 200")
+
+
+    page_soup = BeautifulSoup(glassdoor, 'html.parser')
+
+    jobs_column = page_soup.find(id='JobResults')
+
+    job_names_container = jobs_column.select(".jl .jobContainer > a.jobLink.jobInfoItem.jobTitle ")
     job_names = [name.get_text() for name in job_names_container]
 
-    job_companies_container = jobs_column.select(".jl .empLoc div")
+    job_companies_container = jobs_column.select(".jl .jobContainer .jobHeader a div.jobInfoItem")
     job_companies = [company.get_text() for company in job_companies_container]
 
     job_location_container = jobs_column.select("#resultsCol .jobsearch-SerpJobCard .sjcl .location")
@@ -86,6 +95,9 @@ def get_glassdoor():
     job_links_container = jobs_column.select("#resultsCol .jobsearch-SerpJobCard .title a[href]")
     job_links = [links.get("href") for links in job_links_container]
 
+    print(len(job_names))
+    print(len(job_companies))
+
     for x in range(len(job_names)):
         job_names[x] = format_html(job_names[x])
         job_companies[x] = format_html(job_companies[x])
@@ -96,8 +108,7 @@ def get_glassdoor():
 
     job = pd.DataFrame({
         "job_names": job_names,
-        "job_companies": job_companies
-
+        "job_companies": job_companies,
         #"job_locations": job_location,
         #"job_description": job_description,
         #"job_links": job_links
