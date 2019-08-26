@@ -3,9 +3,6 @@ from urllib.request import Request, urlopen
 import requests
 import pandas as pd
 
-#from selenium import webdriver
-
-#driver = webdriver.Chrome("C:/Users/Jeffrey Ng/Desktop/webdrivers/chromedriver.exe")
 
 def format_html(word):
     for x in range(len(word)):
@@ -86,32 +83,33 @@ def get_glassdoor():
     job_companies_container = jobs_column.select(".jl .jobContainer .jobHeader a div.jobInfoItem")
     job_companies = [company.get_text() for company in job_companies_container]
 
-    job_location_container = jobs_column.select("#resultsCol .jobsearch-SerpJobCard .sjcl .location")
+    job_location_container = jobs_column.select(".jl .jobContainer .jobInfoItem span.subtle")
     job_location = [location.get_text() for location in job_location_container]
 
-    job_description_container = jobs_column.select("#resultsCol .jobsearch-SerpJobCard .summary")
-    job_description = [description.get_text() for description in job_description_container]
+    job_description = []
+    for i in range(len(job_location_container)):
+        job_description.append("Not Available")
 
-    job_links_container = jobs_column.select("#resultsCol .jobsearch-SerpJobCard .title a[href]")
+    job_links_container = jobs_column.select(".jl .jobContainer .jobHeader a[href]")
     job_links = [links.get("href") for links in job_links_container]
 
     print(len(job_names))
-    print(len(job_companies))
+    print(len(job_links))
 
     for x in range(len(job_names)):
         job_names[x] = format_html(job_names[x])
         job_companies[x] = format_html(job_companies[x])
-        #job_location[x] = format_html(job_location[x])
-        #job_description[x] = format_html(job_description[x])
-        #job_links[x] = format_links("https://www.indeed.ca", job_links[x])
+        job_location[x] = format_html(job_location[x])
+        job_description[x] = format_html(job_description[x])
+        job_links[x] = format_links("https://www.glassdoor.ca", job_links[x])
 
 
     job = pd.DataFrame({
         "job_names": job_names,
         "job_companies": job_companies,
-        #"job_locations": job_location,
-        #"job_description": job_description,
-        #"job_links": job_links
+        "job_locations": job_location,
+        "job_description": job_description,
+        "job_links": job_links
     })
     pd.set_option('display.max_colwidth', -1)
 
